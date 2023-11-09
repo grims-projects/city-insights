@@ -1,0 +1,21 @@
+debug: true
+server:
+  port: 8080
+spring:
+  config:
+    import: optional:secrets.yml
+  datasource:
+    url: jdbc:postgresql://localhost:5432/saltdb
+    username: '${postgres.username}'
+    password: '${postgres.password}'
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-drop
+sql:
+  init:
+    mode: always
+    platform: postgresql
+  output:
+    ansi:
+      enabled: always
