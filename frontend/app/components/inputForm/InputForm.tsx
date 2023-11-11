@@ -1,25 +1,31 @@
 "use client";
 import { FormEvent, useRef } from 'react'
+import axios from 'axios';
 
-export default function InputForm() {
+type Props = {
+    setIsButtonClicked: Function;
+    setCityCardProps: Function;
+};
+
+export default function InputForm({ setIsButtonClicked, setCityCardProps }: Props) {
     const inputRef = useRef<HTMLInputElement>(null);
 
-    async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+        setIsButtonClicked(true);
         event.preventDefault();
-        console.log("im here");
 
-        const searchQuery = inputRef.current!.value;
-        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchQuery)}&utf8=&format=json`;
-
-        const response = await fetch(url, {
-          method: 'GET',
-          mode: 'cors'
-        })
-     
-        // Handle response if necessary
-        const data = await response.json();
-        // ...
-      }
+        const city = inputRef.current ? inputRef.current.value : '';
+        axios.get("http://localhost:8080/api/insight?city=" + city)
+            .then(response => {
+                setCityCardProps({
+                    cityName: response.data.cityName,
+                    cityDescription: response.data.cityDescription,
+                    imageUrl: response.data.imageUrl,
+                    wikiUrl: response.data.wikiUrl
+                });
+            })
+            .catch(error => console.error("Error fetching data:", error));
+    }
 
     return (
         <form onSubmit={onSubmit}>

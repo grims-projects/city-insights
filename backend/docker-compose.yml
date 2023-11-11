@@ -8,8 +8,8 @@ services:
       - POSTGRES_USER=salt
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=saltdb
-#    volumes: (skapar en databas som består)
-#      - ./data/pgdata:/var/lib/postgresql/data
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/data
     ports:
       - 5432:5432
     restart: always

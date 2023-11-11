@@ -1,5 +1,6 @@
 package grimkalman.cityinsights.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.UuidGenerator;
@@ -13,6 +14,7 @@ public class CityInsight {
 
     private String cityName;
 
+    @Column(length = 1000)
     private String cityDescription;
     private String insightText;
     private String imageUrl;
@@ -40,6 +42,7 @@ public class CityInsight {
         return cityName;
     }
 
+    @Column(length = 1000)
     public String getCityDescription() {
         return cityDescription;
     }
