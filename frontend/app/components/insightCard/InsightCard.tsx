@@ -4,15 +4,14 @@ import { outfit } from "../../layout";
 import { FormEvent } from 'react';
 
 type Props = {
+    id: string;
     cityName: string;
     imageUrl: string;
     insightText: string;
+    onDelete: (id: string) => void;
 };
 
-export default function InsightCard({ cityName, imageUrl, insightText}: Props) {
-  async function onDelete(event: FormEvent<HTMLButtonElement>): Promise<void> {
-    //todo
-  }
+export default function InsightCard({ id, cityName, imageUrl, insightText, onDelete }: Props) {
   return (
     <article className='w-screen relative'>
         <div className={`absolute top-0 left-8 m-0 text-black text-2xl font-bold ${outfit.className}`}>
@@ -28,12 +27,12 @@ export default function InsightCard({ cityName, imageUrl, insightText}: Props) {
                 className='w-full p-8 blur-sm'
             />
             <div className='absolute inset-0 z-0 p-4 flex items-center justify-center'>
-                <p className={`text-gray text-1xl font-bold p-8 text-center drop-shadow-lg ${outfit.className}`}>
+                <p className={`text-white text-[16px] font-extrabold p-8 text-center drop-shadow-2xl ${outfit.className}`}>
                     {insightText}
                 </p>
             </div>
             <button
-                onClick={onDelete}
+                onClick={() => onDelete(id)} 
                 className={`absolute bottom-0 right-0 m-8 h-[50px] w-[85px] bg-red hover:bg-dark-red text-gray flex items-center justify-center rounded-br-lg ${outfit.className}`}
             >
                 Delete

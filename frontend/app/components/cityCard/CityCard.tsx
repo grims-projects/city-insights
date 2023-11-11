@@ -13,7 +13,7 @@ type Props = {
 
 export default function CityCard({ cityName, cityDescription, imageUrl, wikiUrl }: Props) {
   return (
-    <article className='w-screen'>
+    <article className='w-screen text-black'>
         <div className='h-[300px] w-full flex items-center justify-center overflow-hidden object-scale-down'>
             <Image
             src={imageUrl}
