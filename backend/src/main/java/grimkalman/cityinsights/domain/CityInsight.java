@@ -13,8 +13,6 @@ public class CityInsight {
     private String id;
 
     private String cityName;
-
-    @Column(length = 1000)
     private String cityDescription;
     private String insightText;
     private String imageUrl;

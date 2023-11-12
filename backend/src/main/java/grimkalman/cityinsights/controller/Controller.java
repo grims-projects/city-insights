@@ -3,14 +3,11 @@ package grimkalman.cityinsights.controller;
 import grimkalman.cityinsights.domain.CityInsight;
 import grimkalman.cityinsights.repository.Repository;
 import grimkalman.cityinsights.service.Service;
-import org.apache.el.stream.Stream;
 import org.json.JSONException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -28,8 +25,8 @@ public class Controller {
 
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping
-    CityInsight newCityInsight(@RequestBody CityInsight cityInsight) {
-        return repository.save(cityInsight);
+    ResponseEntity<CityInsight> newCityInsight(@RequestBody CityInsight cityInsight) {
+        return ResponseEntity.ok(repository.save(cityInsight));
     }
     @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/city")
@@ -45,14 +42,13 @@ public class Controller {
     @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/city")
     ResponseEntity<List<CityInsight>> getAllCityInsight() {
-        List<CityInsight> cityInsights = new ArrayList<>();
-        repository.findAll().forEach(cityInsights::add);
-        return ResponseEntity.ok(cityInsights);
+        return ResponseEntity.ok((List<CityInsight>) repository.findAll());
     }
     @GetMapping("/{id}")
-    CityInsight getCityInsightById(@PathVariable String id) {
-        return repository.findById(id).orElseThrow(() -> new NoSuchElementException(id));
+    ResponseEntity<CityInsight> getCityInsightById(@PathVariable String id) {
+        return ResponseEntity.ok(repository.findById(id).orElseThrow(() -> new NoSuchElementException(id)));
     }
+
     @CrossOrigin(origins = "http://localhost:3000")
     @DeleteMapping("/{id}")
     void deleteCityInsight(@PathVariable String id) {
