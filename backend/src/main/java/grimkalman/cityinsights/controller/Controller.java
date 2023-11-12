@@ -4,15 +4,16 @@ import grimkalman.cityinsights.domain.CityInsight;
 import grimkalman.cityinsights.repository.Repository;
 import grimkalman.cityinsights.service.Service;
 import org.json.JSONException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/insight")
+@CrossOrigin(origins = "http://localhost:3000")
 public class Controller {
 
     Repository repository;
@@ -23,35 +24,40 @@ public class Controller {
         this.service = service;
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping
     ResponseEntity<CityInsight> newCityInsight(@RequestBody CityInsight cityInsight) {
         return ResponseEntity.ok(repository.save(cityInsight));
     }
-    @CrossOrigin(origins = "http://localhost:3000")
-    @PostMapping("/city")
-    ResponseEntity<String> getCityFact(@RequestBody String wikiUrl) throws IOException, JSONException, InterruptedException {
-        return ResponseEntity.ok(service.getFact(wikiUrl));
-    }
-    @CrossOrigin(origins = "http://localhost:3000")
+
+
     @GetMapping
     ResponseEntity<CityInsight> getCityInsight(@RequestParam(value="city") String searchQuery) throws IOException, JSONException, InterruptedException {
         return ResponseEntity.ok(service.getCity(searchQuery));
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/city")
     ResponseEntity<List<CityInsight>> getAllCityInsight() {
         return ResponseEntity.ok((List<CityInsight>) repository.findAll());
     }
-    @GetMapping("/{id}")
-    ResponseEntity<CityInsight> getCityInsightById(@PathVariable String id) {
-        return ResponseEntity.ok(repository.findById(id).orElseThrow(() -> new NoSuchElementException(id)));
+
+    @PostMapping("/city")
+    ResponseEntity<String> getCityFact(@RequestBody String wikiUrl) throws IOException, JSONException, InterruptedException {
+        return ResponseEntity.ok(service.getFact(wikiUrl));
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @GetMapping("/{id}")
+    ResponseEntity<CityInsight> getCityInsightById(@PathVariable String id) {
+        return repository.findById(id).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
     @DeleteMapping("/{id}")
-    void deleteCityInsight(@PathVariable String id) {
-        repository.deleteById(id);
+    ResponseEntity<?> deleteCityInsight(@PathVariable String id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }

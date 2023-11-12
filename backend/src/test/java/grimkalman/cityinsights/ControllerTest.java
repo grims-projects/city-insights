@@ -23,13 +23,10 @@ import java.util.Optional;
 public class ControllerTest {
 
     private MockMvc mockMvc;
-
     @Mock
     private Repository repository;
-
     @Mock
     private Service service;
-
     @InjectMocks
     private Controller controller;
 
@@ -93,7 +90,7 @@ public class ControllerTest {
     }
 
     @Test
-    public void testGetCityInsightById_NotFound() throws Exception {
+    public void testGetCityInsightByIdNotFound() throws Exception {
         // Arrange
         String id = "non-existent-id";
         when(repository.findById(id)).thenReturn(Optional.empty());
@@ -138,5 +135,31 @@ public class ControllerTest {
                 .andExpect(content().string(expectedFact));
 
         verify(service, times(1)).getFact(wikiUrl);
+    }
+
+    @Test
+    public void testDeleteCityInsightNotFound() throws Exception {
+        // Arrange
+        String id = "non-existent-id";
+        when(repository.existsById(id)).thenReturn(false);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/insight/{id}", id))
+                .andExpect(status().isNotFound());
+
+        verify(repository, never()).deleteById(id);
+    }
+
+    @Test
+    public void testDeleteCityInsight() throws Exception {
+        // Arrange
+        String id = "existing-id";
+        when(repository.existsById(id)).thenReturn(true);
+
+        // Act & Assert
+        mockMvc.perform(delete("/api/insight/{id}", id))
+                .andExpect(status().isOk());
+
+        verify(repository).deleteById(id);
     }
 }
