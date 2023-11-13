@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/insight")
@@ -24,15 +25,14 @@ public class Controller {
         this.service = service;
     }
 
+    @GetMapping
+    ResponseEntity<CityInsight> getCityInsight(@RequestParam(value="city") String searchQuery) throws IOException, JSONException, InterruptedException, ExecutionException {
+        return ResponseEntity.ok(service.getCity(searchQuery));
+    }
+
     @PostMapping
     ResponseEntity<CityInsight> newCityInsight(@RequestBody CityInsight cityInsight) {
         return ResponseEntity.ok(repository.save(cityInsight));
-    }
-
-
-    @GetMapping
-    ResponseEntity<CityInsight> getCityInsight(@RequestParam(value="city") String searchQuery) throws IOException, JSONException, InterruptedException {
-        return ResponseEntity.ok(service.getCity(searchQuery));
     }
 
     @GetMapping("/city")
@@ -45,13 +45,13 @@ public class Controller {
         return ResponseEntity.ok(service.getFact(wikiUrl));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/city/{id}")
     ResponseEntity<CityInsight> getCityInsightById(@PathVariable String id) {
         return repository.findById(id).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/city/{id}")
     ResponseEntity<?> deleteCityInsight(@PathVariable String id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);

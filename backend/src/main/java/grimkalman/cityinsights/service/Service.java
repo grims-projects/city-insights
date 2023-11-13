@@ -14,10 +14,15 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
+import static grimkalman.cityinsights.utils.WikipediaPageUtils.*;
 
 @org.springframework.stereotype.Service
 public class Service {
-
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private static final String WIKI_API_URL = "https://en.wikipedia.org/w/api.php";
@@ -27,7 +32,6 @@ public class Service {
     private static final String APPLICATION_JSON = "application/json";
     private static final String AUTHORIZATION = "Authorization";
     private static final String BEARER = "Bearer ";
-    private static final int MAX_TEXT_LENGTH = 2000;
     private final String chatGptApiKey;
 
     public Service(@Value("${chatgpt.api.key}") String chatGptApiKey) {
@@ -35,17 +39,30 @@ public class Service {
     }
 
     public String getFact(String wikiUrl) throws IOException, JSONException, InterruptedException {
-        Document wikiHtml = Jsoup.connect(wikiUrl).get();
-        String text = wikiHtml.select(".mw-parser-output").text();
-        String truncatedString = text.substring(0, text.length() - (text.length() / 5));
-         int length = Math.min(truncatedString.length() / 10, MAX_TEXT_LENGTH);
-        String randomizedText = textRandomizer(truncatedString, length);
-        return getChatGptResponse(randomizedText);
+        return getChatGptResponse(
+                textRandomizer(
+                        extractReadableText(
+                                Jsoup.connect(wikiUrl).get())));
     }
 
-    private String textRandomizer(String text, int randomizedTextLength) {
-        int randomNumber = (int) Math.floor(Math.random() * (text.length() - randomizedTextLength + 1));
-        return text.substring(randomNumber, randomNumber + randomizedTextLength);
+    private String textRandomizer(String text) {
+        List<String> sentences = splitIntoSentences(text);
+        if (sentences.size() < 2) {
+            return text;
+        }
+        Random random = new Random();
+        int numberOfSentences = 2 + random.nextInt(Math.min(3, sentences.size() - 1));
+        Collections.shuffle(sentences, random);
+        return sentences.stream()
+                .limit(numberOfSentences)
+                .collect(Collectors.joining(" "));
+    }
+
+    private List<String> splitIntoSentences(String text) {
+        return Arrays.stream(text.split("[.!?]\\s+"))
+                .map(String::trim)
+                .filter(sentence -> !sentence.isEmpty())
+                .collect(Collectors.toList());
     }
 
     private String getChatGptResponse(String randomizedText) throws IOException, JSONException, InterruptedException {
@@ -69,30 +86,25 @@ public class Service {
                 .getString("content");
     }
 
-    public CityInsight getCity(String searchQuery) throws JSONException, IOException, InterruptedException {
+    public CityInsight getCity(String searchQuery) throws JSONException, IOException, InterruptedException, ExecutionException {
         int pageId = getPageId(searchQuery);
         Document wikiHtml = getPageHtml(pageId);
+        CompletableFuture<String> cityNameFuture = CompletableFuture.supplyAsync(() -> getCityName(wikiHtml));
+        CompletableFuture<String> cityDescriptionFuture = CompletableFuture.supplyAsync(() -> getCityDescription(wikiHtml));
+        CompletableFuture<String> imageUrlFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return getImgUrl(wikiHtml);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        CompletableFuture.allOf(cityNameFuture, cityDescriptionFuture, imageUrlFuture).join();
         return new CityInsight(
-                getCityName(wikiHtml),
-                getCityDescription(wikiHtml),
+                cityNameFuture.get(),
+                cityDescriptionFuture.get(),
                 "",
-                getImgUrl(wikiHtml),
+                imageUrlFuture.get(),
                 getWikiUrl(pageId));
-    }
-
-    private String getCityName(Document wikiHtml) {
-        Element title = wikiHtml.select(".mw-page-title-main").first();
-        return title.text();
-    }
-
-    private String getCityDescription(Document wikiHtml) {
-        return wikiHtml.select(".mw-parser-output > p").get(1).text().replaceAll("\\[\\d+]|ⓘ","");
-    }
-
-    private String getImgUrl(Document wikiHtml) throws IOException {
-        Element image = wikiHtml.select(".mw-file-description").first();
-        Document wikiMediaHtml = Jsoup.connect(image.absUrl("href")).get();
-        return wikiMediaHtml.select(".internal").first().absUrl("href");
     }
 
     private Document getPageHtml(int pageId) throws IOException {
