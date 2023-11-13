@@ -9,6 +9,14 @@ import java.io.IOException;
 @Component
 public class WikipediaPageUtils {
 
+    public static String getWikiUrl(int pageId) {
+        return "http://en.wikipedia.org/?curid=" + pageId;
+    }
+
+    public static Document getPageHtml(int pageId) throws IOException {
+        return Jsoup.connect(getWikiUrl(pageId)).get();
+    }
+
     public static String extractReadableText(Document wikiHtml) {
         return wikiHtml.select(".mw-parser-output p")
                 .text()

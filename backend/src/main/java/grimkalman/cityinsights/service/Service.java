@@ -6,7 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
@@ -32,7 +31,10 @@ public class Service {
     private static final String APPLICATION_JSON = "application/json";
     private static final String AUTHORIZATION = "Authorization";
     private static final String BEARER = "Bearer ";
+
     private final String chatGptApiKey;
+
+    private static final String PROMPT = "Give the most interesting fact in one sentence from the provided text on the form: Hey, did you know...?";
 
     public Service(@Value("${chatgpt.api.key}") String chatGptApiKey) {
         this.chatGptApiKey = chatGptApiKey;
@@ -65,21 +67,31 @@ public class Service {
                 .collect(Collectors.toList());
     }
 
-    private String getChatGptResponse(String randomizedText) throws IOException, JSONException, InterruptedException {
-        JSONObject payload = new JSONObject()
+    private String getChatGptResponse(String randomizedText) throws JSONException, IOException, InterruptedException {
+        return parseResponse(
+                HTTP_CLIENT.send(buildHttpRequest(buildPayload(randomizedText)),
+                HttpResponse.BodyHandlers.ofString()).body());
+    }
+
+    private JSONObject buildPayload(String text) throws JSONException {
+        return new JSONObject()
                 .put("model", MODEL)
                 .put("messages", new JSONArray()
-                        .put(new JSONObject().put("role", "system").put("content", "Give the most interesting fact in one sentence from the provided text on the form: Hey, did you know...?"))
-                        .put(new JSONObject().put("role", "user").put("content", randomizedText))
-                );
-        HttpRequest httpRequest = HttpRequest.newBuilder()
+                        .put(new JSONObject().put("role", "system").put("content", PROMPT))
+                        .put(new JSONObject().put("role", "user").put("content", text)));
+    }
+
+    private HttpRequest buildHttpRequest(JSONObject payload) {
+        return HttpRequest.newBuilder()
                 .uri(URI.create(OPENAI_API_URL))
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .header(AUTHORIZATION, BEARER + chatGptApiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
                 .build();
-        HttpResponse<String> response = HTTP_CLIENT.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        return new JSONObject(response.body())
+    }
+
+    private String parseResponse(String responseBody) throws JSONException {
+        return new JSONObject(responseBody)
                 .getJSONArray("choices")
                 .getJSONObject(0)
                 .getJSONObject("message")
@@ -107,22 +119,11 @@ public class Service {
                 getWikiUrl(pageId));
     }
 
-    private Document getPageHtml(int pageId) throws IOException {
-        return Jsoup.connect(getWikiUrl(pageId)).get();
-    }
-
-    private String getWikiUrl(int pageId) {
-        return "http://en.wikipedia.org/?curid=" + pageId;
-    }
-
     private int getPageId(String searchQuery) throws IOException, InterruptedException, JSONException {
-        URI targetURI = URI.create(WIKI_API_URL + "?action=query&list=search&srsearch=" + searchQuery + "&utf8=&format=json");
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(targetURI)
+        return new JSONObject(HTTP_CLIENT.send(HttpRequest.newBuilder()
+                .uri(URI.create(WIKI_API_URL + "?action=query&list=search&srsearch=" + searchQuery + "&utf8=&format=json"))
                 .GET()
-                .build();
-        HttpResponse<String> response = HTTP_CLIENT.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        return new JSONObject(response.body())
+                .build(), HttpResponse.BodyHandlers.ofString()).body())
                 .getJSONObject("query")
                 .getJSONArray("search")
                 .getJSONObject(0)
