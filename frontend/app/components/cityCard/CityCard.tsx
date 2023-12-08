@@ -17,7 +17,7 @@ export default function CityCard({ cityName, cityDescription, imageUrl, wikiUrl 
         <div className='h-[300px] w-full flex items-center justify-center overflow-hidden object-scale-down'>
             <Image
             src={imageUrl}
-            alt="Picture of a city"
+            alt={`Picture of ${cityName}`}
             height={500}
             width={300}
             className='w-full'
