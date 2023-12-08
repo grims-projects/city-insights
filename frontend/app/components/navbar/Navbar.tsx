@@ -1,4 +1,3 @@
-import axios from 'axios';
 import Image from 'next/image'
 import Link from 'next/link';
 
@@ -21,7 +20,7 @@ export default function Navbar({ setIsButtonClicked }: Props) {
             </Link>
           </li>
           <li>
-            <Link href="/myFacts">
+            <Link href="/myfacts">
                 <Image
                     src="/icons/facts.svg"
                     alt="My facts button"
