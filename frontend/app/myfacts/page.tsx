@@ -34,10 +34,12 @@ export default function MyFacts() {
   };
 
   return (
-    <main className={`flex min-h-screen flex-col items-center justify-between ${garamond.className} pl-16 pr-16 pt-6 pb-[84px]`}>
-      {cityInsights.map((insight) => (
-        <InsightCard key={insight.id} id={insight.id} cityName={insight.cityName} imageUrl={insight.imageUrl} insightText={insight.insightText} onDelete={() => handleDelete(insight.id)} />
-      ))}
+    <main className={`min-h-screen ${garamond.className} flex items-center justify-center`}>
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3">
+        {cityInsights.map((insight) => (
+          <InsightCard key={insight.id} id={insight.id} cityName={insight.cityName} imageUrl={insight.imageUrl} insightText={insight.insightText} onDelete={() => handleDelete(insight.id)} />
+        ))}
+      </div>
       <div className="fixed bottom-0 w-full z-10">
         <Navbar setIsButtonClicked={Function} />
       </div>
