@@ -33,7 +33,7 @@ type CityInsight = {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:8080/api/insight/${id}`);
+      await axios.delete(`http://localhost:8080/api/insight/city/${id}`);
       setCityInsights(cityInsights.filter(insight => insight.id !== id));
     } catch (error) {
       console.error("Error deleting insight:", error);

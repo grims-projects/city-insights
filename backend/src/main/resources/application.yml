@@ -6,8 +6,8 @@ spring:
     import: optional:secrets.yml
   datasource:
     url: jdbc:postgresql://localhost:5432/saltdb
-    username: '${postgres.username}'
-    password: '${postgres.password}'
+    username: ${postgres.username}
+    password: ${postgres.password}
   jpa:
     defer-datasource-initialization: true
     hibernate:
